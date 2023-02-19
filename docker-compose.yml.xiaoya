@@ -1,0 +1,17 @@
+version: '3'
+services:
+  xiaoya:
+    image: 'xiaoyaliu/alist:latest'
+    container_name: xiaoya
+    restart: always
+    networks: 
+      - mynetwork
+    ports:
+      - '5678:80'
+      - '5244:5244'
+    volumes:
+      - /etc/xiaoya:/data
+
+networks:
+  mynetwork:
+    external: true
