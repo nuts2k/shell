@@ -171,7 +171,7 @@ systemctl enable --now snell-server
 Write_config(){
 	cat > ${CONF}<<-EOF
 [snell-server]
-listen = ::0:${port}
+listen = 0.0.0.0:${port}
 ipv6 = ${ipv6}
 psk = ${psk}
 obfs = ${obfs}
