@@ -35,7 +35,7 @@ install_dependency curl
 install_dependency dpkg
 
 # 安装 sing-box
-bash -c "$(curl -L https://sing-box.app/deb-install.sh)"
+bash -c "$(curl -fsSL https://sing-box.app/deb-install.sh)"
 
 # 创建配置文件
 cat > /etc/sing-box/config.json << 'EOL'
