@@ -35,10 +35,10 @@ install_dependency curl
 install_dependency dpkg
 
 # 安装 sing-box
-curl -s https://sing-box.app/deb-install.sh | bash
+bash -c "$(curl -L https://sing-box.app/deb-install.sh)"
 
 # 创建配置文件
-tee /etc/sing-box/config.json > /dev/null << EOF
+cat > /etc/sing-box/config.json << 'EOL'
 {
   "inbounds": [
     {
@@ -65,10 +65,10 @@ tee /etc/sing-box/config.json > /dev/null << EOF
     {
       "type": "shadowsocks",
       "tag": "reddit-server",
-      "server": "${server_address}",
-      "server_port": ${server_port},
+      "server": "SERVER_ADDRESS",
+      "server_port": SERVER_PORT,
       "method": "aes-128-gcm",
-      "password": "${server_password}"
+      "password": "SERVER_PASSWORD"
     }
   ],
   "route": {
@@ -88,7 +88,12 @@ tee /etc/sing-box/config.json > /dev/null << EOF
     ]
   }
 }
-EOF
+EOL
+
+# 替换配置文件中的变量
+sed -i "s/SERVER_ADDRESS/${server_address}/g" /etc/sing-box/config.json
+sed -i "s/SERVER_PORT/${server_port}/g" /etc/sing-box/config.json
+sed -i "s/SERVER_PASSWORD/${server_password}/g" /etc/sing-box/config.json
 
 # 设置正确的权限
 chmod 644 /etc/sing-box/config.json
