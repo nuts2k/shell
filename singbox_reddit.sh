@@ -1,16 +1,22 @@
-#!/usr/bin/env bash
+#!/bin/bash
 
-PATH=/bin:/sbin:/usr/bin:/usr/sbin:/usr/local/bin:/usr/local/sbin:~/bin
-export PATH
+# 检查是否为 root 用户
+if [ "$(id -u)" != "0" ]; then
+    echo "此脚本必须以 root 用户运行"
+    exit 1
+fi
+
+# 设置基本环境
+export PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
 
 # 检查并安装依赖项
 install_dependency() {
     if ! command -v "$1" >/dev/null 2>&1; then
         echo "$1 未安装，正在安装..."
         if [ -x "$(command -v apt)" ]; then
-            sudo apt update && sudo apt install -y "$1"
+            apt update && apt install -y "$1"
         elif [ -x "$(command -v yum)" ]; then
-            sudo yum install -y "$1"
+            yum install -y "$1"
         else
             echo "不支持的包管理器，请手动安装 $1"
             exit 1
@@ -29,10 +35,10 @@ install_dependency curl
 install_dependency dpkg
 
 # 安装 sing-box
-bash <(curl -s https://sing-box.app/deb-install.sh)
+curl -s https://sing-box.app/deb-install.sh | bash
 
-# 创建临时配置文件
-config_content=$(cat << 'EOFMARKER'
+# 创建配置文件
+tee /etc/sing-box/config.json > /dev/null << EOF
 {
   "inbounds": [
     {
@@ -59,10 +65,10 @@ config_content=$(cat << 'EOFMARKER'
     {
       "type": "shadowsocks",
       "tag": "reddit-server",
-      "server": "SERVER_ADDRESS",
-      "server_port": SERVER_PORT,
+      "server": "${server_address}",
+      "server_port": ${server_port},
       "method": "aes-128-gcm",
-      "password": "SERVER_PASSWORD"
+      "password": "${server_password}"
     }
   ],
   "route": {
@@ -82,23 +88,14 @@ config_content=$(cat << 'EOFMARKER'
     ]
   }
 }
-EOFMARKER
-)
-
-# 替换变量
-config_content=$(echo "$config_content" | sed "s/SERVER_ADDRESS/$server_address/g")
-config_content=$(echo "$config_content" | sed "s/SERVER_PORT/$server_port/g")
-config_content=$(echo "$config_content" | sed "s/SERVER_PASSWORD/$server_password/g")
-
-# 写入配置文件
-echo "$config_content" | sudo tee /etc/sing-box/config.json > /dev/null
+EOF
 
 # 设置正确的权限
-sudo chmod 644 /etc/sing-box/config.json
+chmod 644 /etc/sing-box/config.json
 
 # 重启 sing-box 服务
-sudo systemctl restart sing-box
+systemctl restart sing-box
 
 # 检查服务状态
 echo "正在检查 sing-box 服务状态..."
-sudo systemctl status sing-box | grep "Active:"
+systemctl status sing-box | grep "Active:"
